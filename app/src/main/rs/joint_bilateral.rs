@@ -41,8 +41,8 @@ static float gaussMatrix[GM_SIZE][GM_SIZE] = {
 };
 
 // buffer containing input image buffer for kernels
-rs_allocation bitmap1;
-rs_allocation floatBuffer;
+rs_allocation noFlashBuffer;
+rs_allocation flashBuffer;
 
 inline static float3 zero_float3() {
     float3 c;
@@ -73,29 +73,44 @@ void init() {
     gaussMult = 1.f / sqrt(2.f * M_PI * GAUSS_SIGMA * GAUSS_SIGMA);
 }
 
+void __attribute__((kernel)) initFlashBuffer(uchar4 in, uint32_t x, uint32_t y) {
+    float3 fRGB;
+    fRGB.r = (float) normU8 * in.r;
+    fRGB.g = (float) normU8 * in.g;
+    fRGB.b = (float) normU8 * in.b;
+    rsSetElementAt_float3(flashBuffer, fRGB, x, y);
+}
+
+void __attribute__((kernel)) initNoFlashBuffer(uchar4 in, uint32_t x, uint32_t y) {
+    float3 fRGB;
+    fRGB.r = normU8 * in.r;
+    fRGB.g = normU8 * in.g;
+    fRGB.b = normU8 * in.b;
+    rsSetElementAt_float3(noFlashBuffer, fRGB, x, y);
+}
 
 // Applies bilateral filter on an image
-float3 __attribute__((kernel)) applyBilateralFilter_float3(uint32_t x, uint32_t y) {
+uchar4 __attribute__((kernel)) bilateral(uchar4 in, uint32_t x, uint32_t y) {
     float3 result = zero_float3();
     float W = 0.f;
 
     for (uint i = 0; i < GM_SIZE; ++i) {
         for (uint j = 0; j < GM_SIZE; ++j) {
             float gm = gaussMatrix[i][j];
-            float3 noflash_pixel = rsGetElementAt_float3(bitmap1, clamp(x + i - gmBorder, 0u, sImageWidth - 1u), clamp(y + j - gmBorder, 0u, sImageHeight - 1u));
-            float3 pixel = rsGetElementAt_float3(floatBuffer, clamp(x + i - gmBorder, 0u, sImageWidth - 1u), clamp(y + j - gmBorder, 0u, sImageHeight - 1u));
-            float3 origin = rsGetElementAt_float3(floatBuffer, x, y);
+            float3 noflash_pixel = rsGetElementAt_float3(noFlashBuffer, clamp(x + i - gmBorder, 0u, sImageWidth - 1u), clamp(y + j - gmBorder, 0u, sImageHeight - 1u));
+            float3 pixel = rsGetElementAt_float3(flashBuffer, clamp(x + i - gmBorder, 0u, sImageWidth - 1u), clamp(y + j - gmBorder, 0u, sImageHeight - 1u));
+            float3 origin = rsGetElementAt_float3(flashBuffer, x, y);
             float ev = gm * gauss(intensityDifference(pixel, origin));
             W += ev;
             result += ev * noflash_pixel;
         }
     }
 
-    return result / W;
-}
-
-
-// Applies bilateral filter and transforms resulting float RGB pixel to byte RGBa pixel
-uchar4 __attribute__((kernel)) bilateral(uchar4 in, uint32_t x, uint32_t y) {
-    return rsPackColorTo8888(applyBilateralFilter_float3(x, y));
+    result = rsGetElementAt_float3(flashBuffer, x, y);;
+    uchar4 out;
+    out.r = (uchar)(255 * result.r);
+    out.g = (uchar)(255 * result.g);
+    out.b = (uchar)(255 * result.b);
+    out.a = 255;
+    return out;
 }

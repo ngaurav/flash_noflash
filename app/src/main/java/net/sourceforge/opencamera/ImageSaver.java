@@ -629,44 +629,44 @@ public class ImageSaver extends Thread {
 				}
 
 				// note, even if we failed saving some of the expo images, still try to save the HDR image
-//				if( MyDebug.LOG )
-//					Log.e(TAG, "create Flash No-Flash image");
-//				main_activity.savingImage(true);
-//
-//				List<Bitmap> bitmaps = loadBitmaps(request.jpeg_images);
-//				if( bitmaps == null ) {
-//					if( MyDebug.LOG )
-//						Log.e(TAG, "failed to load bitmaps");
-//					return false;
-//				}
-//				if( MyDebug.LOG ) {
-//					Log.d(TAG, "Flash No-Flash performance: time after decompressing base exposures: " + (System.currentTimeMillis() - time_s));
-//				}
-//				hdrProcessor.processHDR(bitmaps, true);
-//				if( MyDebug.LOG ) {
-//					Log.d(TAG, "Flash No-Flash performance: time after creating Flash No-Flash image: " + (System.currentTimeMillis() - time_s));
-//				}
-//				// bitmaps.get(0) now stores the HDR image, so free up the rest of the memory asap:
-//				for(int i=1;i<bitmaps.size();i++) {
-//					Bitmap bitmap = bitmaps.get(i);
-//					bitmap.recycle();
-//				}
-//				Bitmap hdr_bitmap = bitmaps.get(0);
-//				bitmaps.clear();
-//				System.gc();
-//				main_activity.savingImage(false);
-//
-//				if( MyDebug.LOG )
-//					Log.d(TAG, "save Flash No-Flash image");
-//				success = saveSingleImageNow(request, request.jpeg_images.get(1), hdr_bitmap, "_Flash_NoFlash", true, true);
-//				if( MyDebug.LOG && !success )
-//					Log.e(TAG, "saveSingleImageNow failed for Flash No-Flash image");
-//				if( MyDebug.LOG ) {
-//					Log.d(TAG, "Flash No-Flash performance: time after saving Flash No-Flash image: " + (System.currentTimeMillis() - time_s));
-//				}
-//				hdr_bitmap.recycle();
-//				hdr_bitmap = null;
-//				System.gc();
+				if( MyDebug.LOG )
+					Log.e(TAG, "create Flash No-Flash image");
+				main_activity.savingImage(true);
+
+				List<Bitmap> bitmaps = loadBitmaps(request.jpeg_images);
+				if( bitmaps == null ) {
+					if( MyDebug.LOG )
+						Log.e(TAG, "failed to load bitmaps");
+					return false;
+				}
+				if( MyDebug.LOG ) {
+					Log.d(TAG, "Flash No-Flash performance: time after decompressing base exposures: " + (System.currentTimeMillis() - time_s));
+				}
+				hdrProcessor.processHDR(bitmaps, true);
+				if( MyDebug.LOG ) {
+					Log.d(TAG, "Flash No-Flash performance: time after creating Flash No-Flash image: " + (System.currentTimeMillis() - time_s));
+				}
+				// bitmaps.get(0) now stores the HDR image, so free up the rest of the memory asap:
+				for(int i=1;i<bitmaps.size();i++) {
+					Bitmap bitmap = bitmaps.get(i);
+					bitmap.recycle();
+				}
+				Bitmap hdr_bitmap = bitmaps.get(0);
+				bitmaps.clear();
+				System.gc();
+				main_activity.savingImage(false);
+
+				if( MyDebug.LOG )
+					Log.d(TAG, "save Flash No-Flash image");
+				success = saveSingleImageNow(request, request.jpeg_images.get(1), hdr_bitmap, "_Flash_NoFlash", true, true);
+				if( MyDebug.LOG && !success )
+					Log.e(TAG, "saveSingleImageNow failed for Flash No-Flash image");
+				if( MyDebug.LOG ) {
+					Log.d(TAG, "Flash No-Flash performance: time after saving Flash No-Flash image: " + (System.currentTimeMillis() - time_s));
+				}
+				hdr_bitmap.recycle();
+				hdr_bitmap = null;
+				System.gc();
 			}
 			else if( request.jpeg_images.size() > 1 ) {
 				if( MyDebug.LOG )
