@@ -16,6 +16,7 @@ import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicHistogram;
+import android.renderscript.Type;
 import android.util.Log;
 
 public class HDRProcessor {
@@ -240,9 +241,9 @@ public class HDRProcessor {
 		if( MyDebug.LOG )
 			Log.d(TAG, "processHDR");
 		int n_bitmaps = bitmaps.size();
-		if( n_bitmaps != 3 ) {
+		if( n_bitmaps != 3 && n_bitmaps != 2  ) {
 			if( MyDebug.LOG )
-				Log.e(TAG, "n_bitmaps should be 3, not " + n_bitmaps);
+				Log.e(TAG, "n_bitmaps should be 2 or 3, not " + n_bitmaps);
 			// throw RuntimeException, as this is a programming error
 			throw new RuntimeException();
 		}
@@ -772,7 +773,10 @@ public class HDRProcessor {
         }
         
         // create allocations
-        Allocation [] allocations = new Allocation[n_bitmaps];
+		Allocation allocationTmp1 = Allocation.createTyped(rs, Type.createXY(rs, Element.F32_3(rs), bm.getWidth(), bm.getHeight()), Allocation.USAGE_SCRIPT);
+		Allocation allocationTmp2 = Allocation.createTyped(rs, Type.createXY(rs, Element.F32_3(rs), bm.getWidth(), bm.getHeight()), Allocation.USAGE_SCRIPT);
+
+		Allocation [] allocations = new Allocation[n_bitmaps];
         for(int i=0;i<n_bitmaps;i++) {
             allocations[i] = Allocation.createFromBitmap(rs, bitmaps.get(i));
         }
@@ -781,8 +785,10 @@ public class HDRProcessor {
         ScriptC_joint_bilateral processHDRScript = new ScriptC_joint_bilateral(rs);
 
         // set allocations
-        processHDRScript.set_bitmap1(allocations[0]);
-		processHDRScript.set_floatBuffer(allocations[1]);
+		processHDRScript.set_flashBuffer(allocations[0]);
+		//processHDRScript.forEach_initFlashBuffer(allocations[0]);
+		processHDRScript.set_noFlashBuffer(allocations[1]);
+		//processHDRScript.forEach_initNoFlashBuffer(allocations[1]);
 		processHDRScript.set_sImageWidth(bm.getWidth());
 		processHDRScript.set_sImageHeight(bm.getHeight());
         
